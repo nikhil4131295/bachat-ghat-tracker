@@ -1,0 +1,19 @@
+{
+  "name": "बचत गट ट्रॅकर | Bachat Ghat Tracker",
+  "short_name": "बचत गट",
+  "description": "ग्रामीण महिला बचत गटांसाठी सोपे डिजिटल हिशोब अॅप",
+  "theme_color": "#1F5F55",
+  "background_color": "#F7FBF9",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="tealGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F5F55"/>
+      <stop offset="100%" stop-color="#133F39"/>
+    </linearGradient>
+    <linearGradient id="coralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF7A59"/>
+      <stop offset="100%" stop-color="#D9694A"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Rounded Squircle -->
+  <rect width="512" height="512" rx="128" fill="url(#tealGrad)"/>
+  
+  <!-- Outer Gold Ring -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#FFE2D1" stroke-width="12" stroke-dasharray="16 12" opacity="0.6"/>
+  
+  <!-- Inner Light Circle -->
+  <circle cx="256" cy="256" r="160" fill="#F7FBF9"/>
+  
+  <!-- Stylized Rupee Symbol with Lotus / Hands Motif -->
+  <!-- Rupee Top Bar -->
+  <rect x="180" y="150" width="152" height="26" rx="13" fill="#1F5F55"/>
+  <rect x="180" y="196" width="130" height="24" rx="12" fill="#1F5F55"/>
+  
+  <!-- Rupee Curve -->
+  <path d="M 235 220 Q 315 220 315 275 Q 315 325 240 330 L 320 400" fill="none" stroke="#1F5F55" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Decorative Accent Coral Dots representing self-help community -->
+  <circle cx="256" cy="115" r="16" fill="url(#coralGrad)"/>
+  <circle cx="340" cy="155" r="12" fill="url(#coralGrad)"/>
+  <circle cx="172" cy="155" r="12" fill="url(#coralGrad)"/>
+</svg>
