@@ -23,19 +23,23 @@ import {
   MoreVertical,
   X,
   Download,
+  ShieldCheck,
+  HelpCircle,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LanguagePickerModal } from '../components/common/LanguagePickerModal';
+import { OnboardingModal } from '../components/common/OnboardingModal';
 import { formatINR } from '../lib/calculations';
 
 export const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { currentGroup, isDemo, exitDemoMode, startDemoMode, syncState, handleManualSync } = useApp();
+  const { currentGroup, isDemo, exitDemoMode, startDemoMode, syncState, handleManualSync, setUserRole } = useApp();
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showTutorialModal, setShowTutorialModal] = useState(false);
 
   const handleCopyCode = () => {
     if (currentGroup?.group_code) {
@@ -328,6 +332,31 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
+        <div className="pt-1 flex flex-col gap-2">
+          {/* Re-open Tutorial */}
+          <button
+            type="button"
+            onClick={() => setShowTutorialModal(true)}
+            className="w-full min-h-touch py-3 rounded-2xl bg-teal-surface hover:bg-teal-100 text-teal-dark font-heading font-bold text-xs flex items-center justify-center gap-2 border border-teal-light/30 transition-colors"
+          >
+            <HelpCircle className="w-4 h-4 text-teal-primary" />
+            <span>ॲप मार्गदर्शक पहा (Tutorial Walkthrough)</span>
+          </button>
+
+          {/* Switch to Officer Portal */}
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.setItem('bg_user_role', 'officer');
+              setUserRole('officer');
+            }}
+            className="w-full min-h-touch py-3 rounded-2xl bg-gray-50 hover:bg-gray-100 text-foreground font-heading font-bold text-xs flex items-center justify-center gap-2 border border-gray-200 transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 text-teal-primary" />
+            <span>ग्रामपंचायत अधिकारी पोर्टल उघडा (Officer Portal)</span>
+          </button>
+        </div>
+
         <button
           type="button"
           onClick={exitDemoMode}
@@ -400,6 +429,14 @@ export const SettingsPage: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Tutorial Walkthrough Modal */}
+      {showTutorialModal && (
+        <OnboardingModal
+          forceOpen={true}
+          onClose={() => setShowTutorialModal(false)}
+        />
       )}
     </div>
   );

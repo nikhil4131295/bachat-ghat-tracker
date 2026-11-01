@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/layout/Header';
@@ -11,14 +11,58 @@ import { OneTapEntryPage } from './pages/OneTapEntryPage';
 import { LoansPage } from './pages/LoansPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { PublicPassbookPage } from './pages/PublicPassbookPage';
+import { OfficerDashboardPage } from './pages/OfficerDashboardPage';
 import { InstallBanner } from './components/pwa/InstallBanner';
+import { OnboardingModal } from './components/common/OnboardingModal';
 import { Settings, Building2 } from 'lucide-react';
+
+function getPassbookTokenFromUrl(): string | null {
+  const path = window.location.pathname;
+  if (path.startsWith('/passbook/')) {
+    const parts = path.split('/passbook/');
+    if (parts[1] && parts[1].trim()) return parts[1].trim();
+  }
+  const params = new URLSearchParams(window.location.search);
+  const qToken = params.get('passbook');
+  if (qToken) return qToken.trim();
+
+  const hash = window.location.hash;
+  if (hash.includes('/passbook/')) {
+    const hashParts = hash.split('/passbook/');
+    if (hashParts[1] && hashParts[1].trim()) return hashParts[1].trim();
+  }
+  return null;
+}
 
 const MainApp: React.FC = () => {
   const { t } = useTranslation();
-  const { currentGroup, activeTab, setActiveTab, isLoading } = useApp();
+  const { currentGroup, userRole, activeTab, setActiveTab, isLoading } = useApp();
   const [isSettingUpGroup, setIsSettingUpGroup] = useState(false);
+  const [passbookToken, setPassbookToken] = useState<string | null>(() => getPassbookTokenFromUrl());
 
+  useEffect(() => {
+    const handlePopState = () => {
+      setPassbookToken(getPassbookTokenFromUrl());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // 1. If public passbook URL is open
+  if (passbookToken) {
+    return (
+      <PublicPassbookPage
+        token={passbookToken}
+        onBackToApp={() => {
+          window.history.pushState({}, '', '/');
+          setPassbookToken(null);
+        }}
+      />
+    );
+  }
+
+  // 2. Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -32,17 +76,22 @@ const MainApp: React.FC = () => {
     );
   }
 
-  // 1. Group setup wizard
+  // 3. Officer Portal if user is Gram Panchayat Officer
+  if (userRole === 'officer') {
+    return <OfficerDashboardPage />;
+  }
+
+  // 4. Group setup wizard
   if (isSettingUpGroup) {
     return <GroupSetupPage onComplete={() => setIsSettingUpGroup(false)} />;
   }
 
-  // 2. Welcome screen if no group loaded
+  // 5. Welcome screen if no group loaded
   if (!currentGroup) {
     return <WelcomePage onGroupSetupNeeded={() => setIsSettingUpGroup(true)} />;
   }
 
-  // 3. Main Dashboard & App
+  // 6. Main Treasurer Dashboard & App
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-teal-light selection:text-white">
       <Header />
@@ -72,6 +121,7 @@ const MainApp: React.FC = () => {
         {activeTab === 'settings' && <SettingsPage />}
       </main>
 
+      <OnboardingModal />
       <InstallBanner />
       <BottomNav />
     </div>

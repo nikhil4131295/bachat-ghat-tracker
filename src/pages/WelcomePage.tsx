@@ -28,6 +28,15 @@ export const WelcomePage: React.FC<{ onGroupSetupNeeded: () => void }> = ({ onGr
     localStorage.setItem('i18nextLng', code);
   };
 
+  const handleTryDemo = async () => {
+    if (selectedRole === 'officer') {
+      localStorage.setItem('bg_user_role', 'officer');
+      setUserRole('officer');
+    } else {
+      await startDemoMode();
+    }
+  };
+
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError('');
@@ -156,10 +165,10 @@ export const WelcomePage: React.FC<{ onGroupSetupNeeded: () => void }> = ({ onGr
           </div>
           <button
             type="button"
-            onClick={startDemoMode}
+            onClick={handleTryDemo}
             className="w-full min-h-touch py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-98 text-amber-950 font-heading font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2"
           >
-            <span>{t('tryDemo')}</span>
+            <span>{selectedRole === 'officer' ? 'अधिकारी डेमो पहा (Try Officer Portal)' : t('tryDemo')}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
