@@ -19,13 +19,37 @@ import { Settings, Building2 } from 'lucide-react';
 
 function getPassbookTokenFromUrl(): string | null {
   const path = window.location.pathname;
+  // Vite injects BASE_URL at build time (e.g. '/bachat-ghat-tracker/' on GitHub Pages, '/' on Vercel)
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, ''); // strip trailing slash
+  const passbookPrefix = `${base}/passbook/`;
+
+  // Check pathname: /bachat-ghat-tracker/passbook/<token>  OR  /passbook/<token>
+  if (path.startsWith(passbookPrefix)) {
+    const token = path.slice(passbookPrefix.length);
+    if (token.trim()) return token.trim();
+  }
   if (path.startsWith('/passbook/')) {
     const parts = path.split('/passbook/');
     if (parts[1] && parts[1].trim()) return parts[1].trim();
   }
+
   const params = new URLSearchParams(window.location.search);
   const qToken = params.get('passbook');
   if (qToken) return qToken.trim();
+
+  // GitHub Pages 404.html redirect: path is encoded as ?p=/passbook/<token>
+  const pParam = params.get('p');
+  if (pParam) {
+    const decoded = decodeURIComponent(pParam);
+    if (decoded.startsWith('/passbook/')) {
+      const token = decoded.replace('/passbook/', '').split('?')[0].trim();
+      if (token) {
+        // Clean up the URL to look normal
+        window.history.replaceState(null, '', `${base}/passbook/${token}`);
+        return token;
+      }
+    }
+  }
 
   const hash = window.location.hash;
   if (hash.includes('/passbook/')) {
@@ -55,7 +79,8 @@ const MainApp: React.FC = () => {
       <PublicPassbookPage
         token={passbookToken}
         onBackToApp={() => {
-          window.history.pushState({}, '', '/');
+          const base = (import.meta.env.BASE_URL || '/');
+          window.history.pushState({}, '', base);
           setPassbookToken(null);
         }}
       />

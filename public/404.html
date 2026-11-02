@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>बचत गट ट्रॅकर</title>
+    <script>
+      // GitHub Pages SPA redirect: preserve the full path as a query param
+      // so the main index.html can parse and restore it.
+      var path = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+      // Encode the path after the repo base as ?p=/passbook/token
+      var base = '/bachat-ghat-tracker';
+      var rest = path.slice(base.length) || '/';
+      var redirect = window.location.origin + base + '/?p=' + encodeURIComponent(rest + search) + hash;
+      window.location.replace(redirect);
+    </script>
+  </head>
+  <body></body>
+</html>

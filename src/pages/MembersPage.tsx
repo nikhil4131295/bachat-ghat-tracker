@@ -74,7 +74,8 @@ export const MembersPage: React.FC = () => {
 
   const handleCopyPassbookLink = (token: string) => {
     const origin = window.location.origin;
-    const url = `${origin}/passbook/${token}`;
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const url = `${origin}${base}/passbook/${token}`;
     navigator.clipboard.writeText(url);
     setCopiedToken(true);
     setTimeout(() => setCopiedToken(false), 2000);
@@ -82,7 +83,8 @@ export const MembersPage: React.FC = () => {
 
   const handleShareWhatsApp = (member: MemberWithStats) => {
     const origin = window.location.origin;
-    const passbookUrl = `${origin}/passbook/${member.passbook_token}`;
+    const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+    const passbookUrl = `${origin}${base}/passbook/${member.passbook_token}`;
     const text = encodeURIComponent(
       `Hello ${member.name}, click here to view your digital passbook for '${currentGroup?.name.split('(')[0].trim()}':\n${passbookUrl}`
     );
