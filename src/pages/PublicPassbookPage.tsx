@@ -97,8 +97,8 @@ export const PublicPassbookPage: React.FC<{ token: string; onBackToApp?: () => v
             group: group || {
               id: localMember.group_id,
               name: 'महिला बचत गट',
-              village: '',
-              panchayat: '',
+              village: 'येरला (Yerla)',
+              panchayat: 'येरला ग्रामपंचायत (Yerla Gram Panchayat)',
               started_date: '',
               monthly_saving_amount: 100,
               monthly_interest_rate: 2,

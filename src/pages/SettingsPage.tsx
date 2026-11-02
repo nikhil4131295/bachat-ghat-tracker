@@ -25,6 +25,8 @@ import {
   Download,
   ShieldCheck,
   HelpCircle,
+  Pencil,
+  MapPin,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { LanguagePickerModal } from '../components/common/LanguagePickerModal';
@@ -33,19 +35,40 @@ import { formatINR } from '../lib/calculations';
 
 export const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { currentGroup, isDemo, exitDemoMode, startDemoMode, syncState, handleManualSync, setUserRole } = useApp();
+  const { currentGroup, updateGroupDetails, isDemo, exitDemoMode, startDemoMode, syncState, handleManualSync, setUserRole } = useApp();
 
   const [copiedCode, setCopiedCode] = useState(false);
   const [isLangModalOpen, setIsLangModalOpen] = useState(false);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showTutorialModal, setShowTutorialModal] = useState(false);
+  const [isEditingGroup, setIsEditingGroup] = useState(false);
+  const [editVillage, setEditVillage] = useState(currentGroup?.village || '');
+  const [editPanchayat, setEditPanchayat] = useState(currentGroup?.panchayat || '');
+  const [editGroupName, setEditGroupName] = useState(currentGroup?.name || '');
+  const [isSavingGroup, setIsSavingGroup] = useState(false);
 
   const handleCopyCode = () => {
     if (currentGroup?.group_code) {
       navigator.clipboard.writeText(currentGroup.group_code);
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  const handleSaveGroupInfo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editVillage.trim()) return;
+    setIsSavingGroup(true);
+    try {
+      await updateGroupDetails({
+        village: editVillage.trim(),
+        panchayat: editPanchayat.trim(),
+        name: editGroupName.trim() || currentGroup?.name,
+      });
+      setIsEditingGroup(false);
+    } finally {
+      setIsSavingGroup(false);
     }
   };
 
@@ -95,7 +118,60 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Group Rules Overview */}
+      {/* 2. Group Details Card (Village & Panchayat) */}
+      {currentGroup && (
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading font-bold text-sm text-foreground flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-teal-primary" />
+              <span>{i18n.language.startsWith('mr') ? 'गटाची माहिती' : i18n.language.startsWith('hi') ? 'समूह की जानकारी' : 'Group Information'}</span>
+            </h3>
+            <button
+              type="button"
+              onClick={() => {
+                setEditVillage(currentGroup.village);
+                setEditPanchayat(currentGroup.panchayat);
+                setEditGroupName(currentGroup.name);
+                setIsEditingGroup(true);
+              }}
+              className="px-3 py-1.5 rounded-xl bg-teal-surface text-teal-dark hover:bg-teal-100 text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>{i18n.language.startsWith('mr') ? 'बदल करा' : i18n.language.startsWith('hi') ? 'बदलें' : 'Edit'}</span>
+            </button>
+          </div>
+
+          <div className="space-y-2.5 text-xs">
+            <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100">
+              <span className="text-muted font-medium text-[11px] block">{t('groupName')}</span>
+              <span className="font-bold text-foreground font-heading text-sm block mt-0.5">
+                {currentGroup.name}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                <span className="text-muted font-medium text-[11px] flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-teal-primary" />
+                  <span>{t('village')}</span>
+                </span>
+                <span className="font-bold text-foreground font-heading text-xs block mt-1">
+                  {currentGroup.village}
+                </span>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-gray-50 border border-gray-100">
+                <span className="text-muted font-medium text-[11px] block">{t('panchayat')}</span>
+                <span className="font-bold text-foreground font-heading text-xs block mt-1 truncate" title={currentGroup.panchayat}>
+                  {currentGroup.panchayat}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Group Rules Overview */}
       {currentGroup && (
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-3">
           <h3 className="font-heading font-bold text-sm text-foreground">
@@ -437,6 +513,88 @@ export const SettingsPage: React.FC = () => {
           forceOpen={true}
           onClose={() => setShowTutorialModal(false)}
         />
+      )}
+
+      {/* Edit Group Info Modal */}
+      {isEditingGroup && currentGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-teal-light/20 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-teal-dark font-heading font-bold text-base">
+                <Building2 className="w-5 h-5 text-teal-primary" />
+                <span>{i18n.language.startsWith('mr') ? 'गाव व गट माहिती बदला' : 'Edit Group Details'}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingGroup(false)}
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveGroupInfo} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-xs font-bold text-muted mb-1">
+                  {t('groupName')}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editGroupName}
+                  onChange={e => setEditGroupName(e.target.value)}
+                  className="w-full min-h-touch px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-primary focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-muted mb-1">
+                  {t('village')} *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editVillage}
+                  onChange={e => setEditVillage(e.target.value)}
+                  placeholder="उदा. येरला (Yerla)"
+                  className="w-full min-h-touch px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-primary focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-muted mb-1">
+                  {t('panchayat')} *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editPanchayat}
+                  onChange={e => setEditPanchayat(e.target.value)}
+                  placeholder="उदा. येरला ग्रामपंचायत"
+                  className="w-full min-h-touch px-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-primary focus:bg-white"
+                />
+              </div>
+
+              <div className="pt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingGroup(false)}
+                  className="flex-1 min-h-touch py-2.5 rounded-2xl border border-gray-200 font-heading font-bold text-sm text-muted"
+                >
+                  {t('prevStep') || 'रद्द करा'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingGroup || !editVillage.trim()}
+                  className="flex-1 min-h-touch py-2.5 rounded-2xl bg-teal-primary hover:bg-teal-dark text-white font-heading font-bold text-sm shadow-md transition-all flex items-center justify-center gap-1.5"
+                >
+                  {isSavingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>{t('save') || 'जतन करा'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

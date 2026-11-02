@@ -5,8 +5,8 @@ export const DEMO_GROUP_ID = 'a0000000-0000-0000-0000-000000000001';
 export const DEMO_GROUP: Group = {
   id: DEMO_GROUP_ID,
   name: 'जय भवानी महिला बचत गट (Jai Bhavani Mahila Bachat Ghat)',
-  village: 'खैरी (Khairi)',
-  panchayat: 'खैरी ग्रामपंचायत (Khairi Gram Panchayat)',
+  village: 'येरला (Yerla)',
+  panchayat: 'येरला ग्रामपंचायत (Yerla Gram Panchayat)',
   started_date: '2026-05-10',
   monthly_saving_amount: 100,
   monthly_interest_rate: 2.0,

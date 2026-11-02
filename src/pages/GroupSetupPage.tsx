@@ -11,8 +11,8 @@ export const GroupSetupPage: React.FC<{ onComplete: () => void }> = ({ onComplet
 
   // Step 1: Info
   const [groupName, setGroupName] = useState('Jai Bhavani Mahila Bachat Ghat');
-  const [village, setVillage] = useState('Khairi');
-  const [panchayat, setPanchayat] = useState('Khairi Gram Panchayat');
+  const [village, setVillage] = useState('Yerla');
+  const [panchayat, setPanchayat] = useState('Yerla Gram Panchayat');
   const [startedDate, setStartedDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Step 2: Rules

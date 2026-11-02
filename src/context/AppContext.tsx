@@ -22,6 +22,7 @@ interface AppContextType {
   startDemoMode: () => Promise<void>;
   exitDemoMode: () => void;
   setupNewGroup: (groupInfo: Omit<Group, 'id' | 'group_code' | 'created_at'>, initialMembers: string[]) => Promise<Group>;
+  updateGroupDetails: (updates: Partial<Group>) => Promise<void>;
   addMember: (name: string, phone?: string) => Promise<Member>;
   updateMember: (id: string, updates: Partial<Member>) => Promise<void>;
   toggleMemberActive: (id: string) => Promise<void>;
@@ -68,6 +69,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return () => unsubscribe();
   }, [currentGroup?.id]);
 
+  // Helper to migrate legacy 'Khairi' default to 'Yerla'
+  const migrateGroupVillageIfNeeded = async (grp: Group): Promise<Group> => {
+    if (grp.village && (grp.village.includes('Khairi') || grp.village.includes('खैरी'))) {
+      const updatedVillage = grp.village
+        .replace(/खैरी\s*\(Khairi\)/g, 'येरला (Yerla)')
+        .replace(/खैरी/g, 'येरला')
+        .replace(/Khairi/g, 'Yerla');
+      const updatedPanchayat = (grp.panchayat || '')
+        .replace(/खैरी\s*ग्रामपंचायत\s*\(Khairi Gram Panchayat\)/g, 'येरला ग्रामपंचायत (Yerla Gram Panchayat)')
+        .replace(/खैरी\s*ग्रामपंचायत/g, 'येरला ग्रामपंचायत')
+        .replace(/खैरी/g, 'येरला')
+        .replace(/Khairi/g, 'Yerla');
+
+      const updatedGroup: Group = {
+        ...grp,
+        village: updatedVillage,
+        panchayat: updatedPanchayat,
+      };
+
+      await db.groups.put(updatedGroup);
+
+      if (isSupabaseConfigured() && grp.id !== DEMO_GROUP_ID) {
+        try {
+          await supabase.from('groups').update({
+            village: updatedVillage,
+            panchayat: updatedPanchayat,
+          }).eq('id', grp.id);
+        } catch (e) {
+          console.warn('Could not sync migrated village to Supabase:', e);
+        }
+      }
+      return updatedGroup;
+    }
+    return grp;
+  };
+
   // Initialize data
   useEffect(() => {
     async function init() {
@@ -81,7 +118,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             try {
               const { data: remoteGroups } = await supabase.from('groups').select('*').limit(1);
               if (remoteGroups && remoteGroups.length > 0) {
-                const grp = remoteGroups[0] as Group;
+                const grp = await migrateGroupVillageIfNeeded(remoteGroups[0] as Group);
                 setCurrentGroup(grp);
                 await db.groups.put(grp);
                 await syncGroupFromRemote(grp.id);
@@ -97,8 +134,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const savedGroups = await db.groups.toArray();
           const nonDemo = savedGroups.find(g => g.id !== DEMO_GROUP_ID);
           if (nonDemo) {
-            setCurrentGroup(nonDemo);
-            await loadGroupData(nonDemo.id);
+            const migrated = await migrateGroupVillageIfNeeded(nonDemo);
+            setCurrentGroup(migrated);
+            await loadGroupData(migrated.id);
           }
         }
       } catch (err) {
@@ -141,7 +179,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     await seedDemoDataToIndexedDB();
     const group = await db.groups.get(DEMO_GROUP_ID);
     if (group) {
-      setCurrentGroup(group);
+      const migrated = await migrateGroupVillageIfNeeded(group);
+      setCurrentGroup(migrated);
       await loadGroupData(DEMO_GROUP_ID);
     }
   };
@@ -255,6 +294,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return newGroup;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Update Group details (e.g. Village, Panchayat, Name)
+  const updateGroupDetails = async (updates: Partial<Group>): Promise<void> => {
+    if (!currentGroup) return;
+    const updated: Group = { ...currentGroup, ...updates };
+    setCurrentGroup(updated);
+    await db.groups.put(updated);
+
+    if (isSupabaseConfigured() && currentGroup.id !== DEMO_GROUP_ID) {
+      try {
+        await supabase.from('groups').update(updates).eq('id', currentGroup.id);
+      } catch (err) {
+        console.warn('Group update queued locally:', err);
+      }
     }
   };
 
@@ -513,6 +568,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         startDemoMode,
         exitDemoMode,
         setupNewGroup,
+        updateGroupDetails,
         addMember,
         updateMember,
         toggleMemberActive,
