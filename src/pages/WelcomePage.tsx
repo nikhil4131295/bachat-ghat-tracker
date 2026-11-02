@@ -20,8 +20,11 @@ export const WelcomePage: React.FC<{ onGroupSetupNeeded: () => void }> = ({ onGr
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [authError, setAuthError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const ADMIN_INVITE_CODE = import.meta.env.VITE_ADMIN_INVITE_CODE || '';
 
   const handleLanguageChange = (code: string) => {
     i18n.changeLanguage(code);
@@ -43,6 +46,13 @@ export const WelcomePage: React.FC<{ onGroupSetupNeeded: () => void }> = ({ onGr
     setIsSubmitting(true);
 
     try {
+      // If signing up as Treasurer or Officer, verify the invite code
+      if (isSignUp && ADMIN_INVITE_CODE) {
+        if (inviteCode.trim() !== ADMIN_INVITE_CODE) {
+          setAuthError('Invalid admin invite code. Please contact the administrator.');
+          return;
+        }
+      }
       if (!isSupabaseConfigured()) {
         // Fallback for offline/local simulation
         localStorage.setItem('bg_user_role', selectedRole);
@@ -263,6 +273,26 @@ export const WelcomePage: React.FC<{ onGroupSetupNeeded: () => void }> = ({ onGr
                     className="w-full min-h-touch pl-10 pr-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-primary focus:bg-white"
                   />
                 </div>
+              </div>
+            )}
+
+            {isSignUp && (
+              <div>
+                <label className="block text-xs font-bold text-muted mb-1">
+                  Admin Invite Code
+                </label>
+                <div className="relative">
+                  <ShieldCheck className="w-4 h-4 text-gray-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    value={inviteCode}
+                    onChange={e => setInviteCode(e.target.value)}
+                    placeholder="Enter admin invite code"
+                    className="w-full min-h-touch pl-10 pr-4 py-2.5 rounded-2xl bg-gray-50 border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-teal-primary focus:bg-white"
+                  />
+                </div>
+                <p className="text-[11px] text-muted mt-1">Only authorized administrators can sign up.</p>
               </div>
             )}
 
